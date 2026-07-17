@@ -14,6 +14,7 @@ export type StandingQuestionRow = {
 
 export type ToldLedgerRow = {
   id: string;
+  question: string; // joined from standing_questions
   standing_question_id: string;
   told_at: string;
   rule: DeltaRule;

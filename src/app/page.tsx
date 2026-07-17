@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { AskForm } from "@/components/AskForm";
 import { ErrorCard } from "@/components/ErrorCard";
 import { LivingAnswerCard } from "@/components/LivingAnswerCard";
+import { ToldFeed } from "@/components/ToldFeed";
 import { ask } from "@/core/ask";
+import { listRecentTold, type ToldLedgerRow } from "@/core/db";
 
 export const metadata: Metadata = {
   title: "Standing Questions",
@@ -20,6 +22,13 @@ export default async function Home({
   const demoQuestion =
     typeof demoRaw === "string" && demoRaw.trim().length >= 3 ? demoRaw.trim().slice(0, 300) : null;
   const demoResult = demoQuestion ? await ask(demoQuestion) : null;
+
+  let told: ToldLedgerRow[] = [];
+  try {
+    told = await listRecentTold(6);
+  } catch {
+    // told feed is progressive enhancement; the page renders without it
+  }
 
   return (
     <div className="flex flex-1 flex-col items-center bg-zinc-950 font-sans">
@@ -63,6 +72,8 @@ export default async function Home({
               <ErrorCard reason={demoResult.reason} message={demoResult.message} />
             </section>
           ))}
+
+        <ToldFeed rows={told} />
 
         <footer className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 pt-8 text-xs text-zinc-600">
           <span>ClickHouse and Trigger.dev Summer Hackathon 2026</span>
