@@ -36,12 +36,18 @@ Submission is a Google Form (link in prep file), NOT Devpost.
   real data; sq_ticks 1 row/1 delta in Cloud). ToldFeed on page. Realtime:
   runs self-tag 'sq', /api/realtime-token (read-only public token),
   LiveRefresh hook with 30s-refresh fallback.
-- Trigger deploys: 20260717.1 (zd0iqqd2, ingest only) + second deploy
-  81eg432i (ingest + reeval). ⚠ UNVERIFIED: prod scheduled runs actually
-  firing (Cloud CH count flat at 15:02 after the 15:00 boundary; dashboard
-  check in flight). doppler TRIGGER_SECRET_KEY is DEV-scoped: SDK cannot see
-  prod runs/schedules; Realtime token minting from the deployed app needs a
-  PROD secret key seeded (operator).
+- Trigger prod VERIFIED LIVE (v20260717.4, node-22, 2 tasks): ingest cron
+  fired autonomously at 22:15 UTC - Cloud CH 2,726 -> 11,083 rows in one 25s
+  capture; reeval cron completed with a silent tick (343ms, sq_ticks row) on
+  the pinned question - S2 acceptance proven by the deployed cron itself.
+  Root-caused en route: default "node" runtime lacks global WebSocket
+  ("WebSocket is not defined", 3 failed runs) -> runtime "node-22"; one
+  transient apt exit-100 image-build failure, clean on retry.
+- Prod visibility WITHOUT dashboard: `npx trigger.dev@4.5.4 mcp` spoken over
+  stdio JSON-RPC (tools: list_runs, get_run_details) authenticates via the
+  CLI login and sees prod runs/schedules. doppler TRIGGER_SECRET_KEY is
+  DEV-scoped: Realtime token minting on the deployed app needs a PROD secret
+  key seeded (operator); UI falls back to 30s refresh until then.
 
 ## Local runtime (re-establish after reboot)
 - clickhousectl server `standing-questions` on http 8123 / tcp 9000. Restart:
