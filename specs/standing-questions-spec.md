@@ -75,7 +75,8 @@ key, no upload.
 - Visual-first is enforced, not hoped: agent surfaces render charts/cards;
   verdicts are one line; notes are twenty words; there is no long-form text
   path to fall back to.
-- The model (claude-sonnet-5, temperature 0) proposes typed plans only;
+- The model (claude-sonnet-5, thinking disabled, low effort; the Claude 5
+  family has no sampling parameters) proposes typed plans only;
   deterministic code owns validation, execution, delta decisions, and every
   terminal state. Model output never reaches the page unvalidated; the style
   ban (no long dashes) lives in the prompt AND is verified on capture.

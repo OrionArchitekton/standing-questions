@@ -1,0 +1,15 @@
+{
+  "provedAt": "2026-07-17T20:58:11.710Z",
+  "question": "How many posts per hour were created yesterday?",
+  "model": "claude-sonnet-5",
+  "clickhouse": "local 26.7 (seeded)",
+  "sql": "SELECT toStartOfHour(toDateTime(ts)) AS hour, count() AS post_count FROM bluesky_events WHERE collection = 'app.bsky.feed.post' AND operation = 'create' AND toDate(ts) = yesterday() GROUP BY hour ORDER BY hour LIMIT 24",
+  "chart": {
+    "type": "line",
+    "x": "hour",
+    "y": "post_count",
+    "title": "Posts Created Per Hour Yesterday"
+  },
+  "verdict": "Latest hourly post count was 2",
+  "seriesPoints": 24
+}

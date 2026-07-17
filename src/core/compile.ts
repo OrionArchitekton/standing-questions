@@ -24,14 +24,15 @@ export function buildCompilePrompt(question: string, schema: FirehoseSchema): st
 
 function sqlAllowed(sql: string, schema: FirehoseSchema): boolean {
   const trimmed = sql.trim();
-  if (!/^SELECT\b/i.test(trimmed)) return false;
-  if (trimmed.includes(";")) return false;
-  if (!/\bLIMIT\s+\d+\s*$/i.test(trimmed)) return false;
-  if (/\b(INSERT|ALTER|DROP|CREATE|TRUNCATE|DELETE|UPDATE|GRANT|SYSTEM)\b/i.test(trimmed)) {
+  const stripped = trimmed.replace(/'(?:[^']|'')*'/g, "''");
+  if (!/^SELECT\b/i.test(stripped)) return false;
+  if (stripped.includes(";")) return false;
+  if (!/\bLIMIT\s+\d+\s*$/i.test(stripped)) return false;
+  if (/\b(INSERT|ALTER|DROP|CREATE|TRUNCATE|DELETE|UPDATE|GRANT|SYSTEM)\b/i.test(stripped)) {
     return false;
   }
   const allowed = new Set(schema.tables.map((t) => t.name.toLowerCase()));
-  const referenced = [...trimmed.matchAll(/\b(?:FROM|JOIN)\s+([A-Za-z0-9_.]+)/gi)].map((m) =>
+  const referenced = [...stripped.matchAll(/\b(?:FROM|JOIN)\s+([A-Za-z0-9_.]+)/gi)].map((m) =>
     m[1].toLowerCase(),
   );
   if (referenced.length === 0) return false;

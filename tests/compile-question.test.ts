@@ -66,6 +66,22 @@ describe("compileQuestion (spec S1: typed, fail-closed model boundary)", () => {
     expect(r).toEqual({ ok: false, reason: "disallowed" });
   });
 
+  it("accepts blocked keywords appearing only inside string literals", async () => {
+    const good = JSON.parse(validPlanJson);
+    good.sql =
+      "SELECT toStartOfHour(ts) AS t, count() AS v FROM bluesky_events WHERE operation = 'create' AND lang = 'en;dr''op' GROUP BY t ORDER BY t LIMIT 200";
+    const r = await compileQuestion("q", schema, propose(JSON.stringify(good)));
+    expect(r.ok).toBe(true);
+  });
+
+  it("still rejects blocked keywords outside string literals", async () => {
+    const bad = JSON.parse(validPlanJson);
+    bad.sql =
+      "SELECT count() AS v, now() AS t FROM bluesky_events WHERE lang = 'en' AND 1 = (DROP TABLE x) LIMIT 10";
+    const r = await compileQuestion("q", schema, propose(JSON.stringify(bad)));
+    expect(r).toEqual({ ok: false, reason: "disallowed" });
+  });
+
   it("maps an explicit model refusal to refusal", async () => {
     const r = await compileQuestion("q", schema, propose("REFUSE: cannot answer this"));
     expect(r).toEqual({ ok: false, reason: "refusal" });
