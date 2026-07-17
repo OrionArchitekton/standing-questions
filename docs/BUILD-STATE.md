@@ -16,6 +16,12 @@ SLICE 3 / S4 BONUS LIVE (all four scenarios' infrastructure now proven):
   reuses existing pub, destination {database} only for db pipes.
 
 PUBLIC URL (verified live): https://standing-questions.vercel.app
+- REALTIME LIVE (~16:35 PT): operator seeded the prod TRIGGER_SECRET_KEY
+  into doppler prd config; seeded to Vercel via stdin + redeploy;
+  /api/realtime-token 200 with scoped JWT; "live: watching agent sweeps"
+  badge browser-verified on the public page. doppler layout: dev config =
+  tr_dev key (local dev-mode), prd config = tr_prod key (deployed app +
+  prod SDK observability - runs.list/schedules.list now work from prd).
 - /api/ask 200 with real cron-ingested Cloud data (2,295 posts in the
   current hour bucket); ?demo= SSR carries the card; burst test = 10x 400
   then 429s (per-IP limiter); /api/realtime-token 503 -> 30s fallback
