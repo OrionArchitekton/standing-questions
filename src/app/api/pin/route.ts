@@ -3,10 +3,12 @@ import { z } from "zod";
 import { listActiveStandingQuestions, pinStandingQuestion } from "@/core/db";
 import { chartPlanSchema } from "@/core/plan";
 import type { ChartPlan } from "@/core/plan";
+import { makeRateLimiter } from "@/core/rate-limit";
 
 export const runtime = "nodejs";
 
 const MAX_ACTIVE_QUESTIONS = 50;
+const allowPin = makeRateLimiter({ limit: 5, windowMs: 60_000 });
 
 const snapshotSchema = z.object({
   capturedAt: z.string().min(1),
@@ -21,6 +23,13 @@ const pinBodySchema = z.object({
 });
 
 export async function POST(req: Request): Promise<NextResponse> {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+  if (!allowPin(ip)) {
+    return NextResponse.json(
+      { ok: false, reason: "rate_limited", message: "Too many pins; wait a minute." },
+      { status: 429 },
+    );
+  }
   let body: unknown;
   try {
     body = await req.json();

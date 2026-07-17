@@ -8,6 +8,8 @@ const REASON_LABELS: Record<string, string> = {
   unconfigured: "Not configured",
   bad_request: "Bad request",
   network: "Network error",
+  rate_limited: "Slow down",
+  capacity: "At capacity",
 };
 
 export function ErrorCard({ reason, message }: { reason: string; message: string }) {
