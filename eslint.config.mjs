@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendor agent-skills packs (sponsor tooling, not app code):
+    ".agents/**",
+    ".claude/**",
   ]),
 ]);
 
