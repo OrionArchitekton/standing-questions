@@ -3,9 +3,11 @@ import { AskForm } from "@/components/AskForm";
 import { ErrorCard } from "@/components/ErrorCard";
 import { LiveRefresh } from "@/components/LiveRefresh";
 import { LivingAnswerCard } from "@/components/LivingAnswerCard";
+import { StandingWatch } from "@/components/StandingWatch";
 import { ToldFeed } from "@/components/ToldFeed";
 import { ask } from "@/core/ask";
 import { listRecentTold, type ToldLedgerRow } from "@/core/db";
+import { sinceLastTold, type WatchRow } from "@/core/olap-join";
 
 export const metadata: Metadata = {
   title: "Standing Questions",
@@ -30,6 +32,7 @@ export default async function Home({
   } catch {
     // told feed is progressive enhancement; the page renders without it
   }
+  const watch: WatchRow[] = await sinceLastTold();
 
   return (
     <div className="flex flex-1 flex-col items-center bg-zinc-950 font-sans">
@@ -74,6 +77,7 @@ export default async function Home({
             </section>
           ))}
 
+        <StandingWatch rows={watch} />
         <ToldFeed rows={told} />
         <LiveRefresh />
 
