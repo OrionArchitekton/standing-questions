@@ -1,4 +1,19 @@
-# Build state (updated 2026-07-17 ~15:25 PT, day 1)
+# Build state (updated 2026-07-17 ~15:45 PT, day 1)
+
+SLICE 3 / S4 BONUS LIVE (all four scenarios' infrastructure now proven):
+- Neon logical replication ON (operator, ~15:30); clickpipes_user
+  (REPLICATION + SELECT-only) with password in doppler
+  NEON_CLICKPIPES_PASSWORD; ClickPipe sq-neon-cdc
+  (e94ffca2-4fc3-4113-b661-d8df42a63280) created via Cloud API, Running.
+- standing_questions + told_ledger CDC'd into Cloud CH default db
+  (SharedReplacingMergeTree, _peerdb_version / _peerdb_is_deleted).
+- S4 join live on the PUBLIC page: StandingWatch section, told-ledger vs
+  hourly firehose rollup, greatest() for join_use_nulls=0 zero-DateTime
+  misses. 47/47 tests; deployed READY.
+- ClickPipes API contract recon persisted: OpenAPI spec copy at scratchpad
+  ch-openapi.json (session-scoped); key facts: POST .../clickpipes, basic
+  auth key-id:secret, source.postgres type "neon", settings.publicationName
+  reuses existing pub, destination {database} only for db pipes.
 
 PUBLIC URL (verified live): https://standing-questions.vercel.app
 - /api/ask 200 with real cron-ingested Cloud data (2,295 posts in the
