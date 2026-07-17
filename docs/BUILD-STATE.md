@@ -1,4 +1,4 @@
-# Build state (updated 2026-07-17 ~14:40 PT, day 1)
+# Build state (updated 2026-07-17 ~15:05 PT, day 1)
 
 Authoritative spec: `specs/standing-questions-spec.md`. Judged criteria and
 recon: `../CLICKHOUSE-TRIGGERDEV-PREP-20260716.md`. Deadline: 2026-07-23
@@ -27,6 +27,21 @@ Submission is a Google Form (link in prep file), NOT Devpost.
   thinking disabled + effort low. Spec updated to match.
 - firehose-schema description fixed: ts described as UTC DateTime (was "UTC
   seconds", which made the model emit toUnixTimestamp/toDateTime warts).
+- SLICE 2 (41/41 tests): ingest-firehose task (5-min cron, bounded 25s
+  Jetstream capture -> Cloud CH batch insert) LIVE-PROVEN manually (2,726
+  rows / 8s window, count verified). Neon standing_questions + told_ledger
+  applied; /api/pin + PinButton (browser-verified, Neon row confirmed);
+  reeval-standing-questions task (10-min cron): evaluatePlan -> diffSnapshots
+  vs told-baseline -> told_ledger + sq_ticks, LIVE-PROVEN (threshold fired on
+  real data; sq_ticks 1 row/1 delta in Cloud). ToldFeed on page. Realtime:
+  runs self-tag 'sq', /api/realtime-token (read-only public token),
+  LiveRefresh hook with 30s-refresh fallback.
+- Trigger deploys: 20260717.1 (zd0iqqd2, ingest only) + second deploy
+  81eg432i (ingest + reeval). ⚠ UNVERIFIED: prod scheduled runs actually
+  firing (Cloud CH count flat at 15:02 after the 15:00 boundary; dashboard
+  check in flight). doppler TRIGGER_SECRET_KEY is DEV-scoped: SDK cannot see
+  prod runs/schedules; Realtime token minting from the deployed app needs a
+  PROD secret key seeded (operator).
 
 ## Local runtime (re-establish after reboot)
 - clickhousectl server `standing-questions` on http 8123 / tcp 9000. Restart:
