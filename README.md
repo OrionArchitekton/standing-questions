@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Standing Questions
 
-## Getting Started
+Ask the Bluesky firehose a question once. Get a living chart instead of a paragraph. Pin it, and an agent keeps re-evaluating on a schedule; when the picture materially changes, the agent reopens the thread with a visual delta, not a wall of text.
 
-First, run the development server:
+Built for the ClickHouse and Trigger.dev Virtual Summer Hackathon 2026 (theme: "Beyond the Wall of Text").
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## How it works
+
+```
+question --> compileQuestion (claude-sonnet-5, fail-closed JSON plan)
+                |  SQL gate: single SELECT, allowlisted tables, LIMIT required,
+                |  keyword blocklist with string-literal stripping
+                v
+          evaluatePlan --> ClickHouse Cloud (bluesky_events, live firehose data)
+                |
+                v
+          Living Answer card: in-house SVG chart + one-line verdict + evidence drawer
+                |  Pin it
+                v
+          standing_questions + told_ledger (Neon Postgres, OLTP)
+                |
+   Trigger.dev scheduled tasks (prod, verified live):
+     ingest-firehose  */5   bounded 25s Jetstream capture -> batch insert
+     reeval-standing  */10  evaluatePlan -> diffSnapshots vs told-baseline
+                |  deterministic delta rule fires (threshold or regime, never model vibes)
+                v
+          Told-Ledger row + Delta Card in the thread feed
+          (Trigger.dev Realtime pushes the refresh; 30s fallback without a token)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- The baseline only moves when the agent tells you something, so slow drifts accumulate until the rule fires instead of being silently absorbed.
+- Every evaluation writes self-telemetry to `sq_ticks` in ClickHouse (outcome silent/delta/error, eval latency).
+- The model never touches the database directly: it emits a JSON plan; a deterministic gate validates the SQL before anything executes. Refusals, malformed plans, gated SQL, timeouts, query errors, and unreachable data all render as typed error cards.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **ClickHouse Cloud**: OLAP home of the firehose (`bluesky_events`) and agent telemetry (`sq_ticks`); local clickhousectl server for dev/tests.
+- **Trigger.dev v4**: scheduled ingest + re-evaluation tasks (runtime `node-22`), run tags + Realtime for live UI refresh.
+- **Neon Postgres**: OLTP plane; standing questions and the Told-Ledger. A `sq_cdc` publication is ready for ClickPipes CDC into ClickHouse (bonus category).
+- **Next.js 16 + Anthropic API**: chat page, SSR `?demo=` mode, `/api/ask` and `/api/pin` with per-IP rate limits.
 
-## Learn More
+## Run it
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+# secrets via doppler (ANTHROPIC_API_KEY, CLICKHOUSE_*, DATABASE_URL, TRIGGER_SECRET_KEY)
+npm run dev                      # app
+npx vitest run                   # 45 unit tests (seams: compile gate, diff, geometry, ingest mapping, rate limit)
+npx vitest run --config vitest.proof.config.ts   # live proofs (real model, real ClickHouse, real Jetstream)
+npx trigger.dev@4.5.4 dev        # run the tasks locally
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Honest limits
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- The public demo is keyless and read-only; per-IP rate limits are per serverless instance, not global.
+- ClickPipes CDC (OLTP to OLAP join) requires the Neon logical replication toggle; the publication is created and the join lands when the toggle flips.
+- One week of build window; the delta rules are two deterministic kinds (threshold, regime), not a rules engine.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+All code written during the hackathon window. AI assistants were used, as permitted by the rules.

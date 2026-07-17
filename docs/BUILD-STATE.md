@@ -1,4 +1,14 @@
-# Build state (updated 2026-07-17 ~15:05 PT, day 1)
+# Build state (updated 2026-07-17 ~15:25 PT, day 1)
+
+PUBLIC URL (verified live): https://standing-questions.vercel.app
+- /api/ask 200 with real cron-ingested Cloud data (2,295 posts in the
+  current hour bucket); ?demo= SSR carries the card; burst test = 10x 400
+  then 429s (per-IP limiter); /api/realtime-token 503 -> 30s fallback
+  (dev-scoped TRIGGER_SECRET_KEY deliberately NOT seeded on Vercel: a
+  dev-env Realtime subscription would watch the empty dev env and never
+  refresh; seed the PROD key then `vercel env add` + redeploy).
+- Vercel project standing-questions (scope dan-mercedes-projects), GitHub
+  repo auto-connected, functions pinned pdx1.
 
 Authoritative spec: `specs/standing-questions-spec.md`. Judged criteria and
 recon: `../CLICKHOUSE-TRIGGERDEV-PREP-20260716.md`. Deadline: 2026-07-23
