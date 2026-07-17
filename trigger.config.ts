@@ -3,7 +3,9 @@ import { syncEnvVars } from "@trigger.dev/build/extensions/core";
 
 export default defineConfig({
   project: "proj_zzzpureafpslkdubhxkc",
-  runtime: "node",
+  // node-22: the default "node" runtime lacks the global WebSocket the
+  // Jetstream capture uses (prod runs failed with "WebSocket is not defined")
+  runtime: "node-22",
   logLevel: "log",
   maxDuration: 300,
   dirs: ["./src/trigger"],
