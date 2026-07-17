@@ -1,5 +1,5 @@
 import { createClient } from "@clickhouse/client";
-import { logger, metadata, schedules } from "@trigger.dev/sdk";
+import { logger, metadata, schedules, tags } from "@trigger.dev/sdk";
 import { listActiveStandingQuestions, recordEvaluation, recordTold } from "../core/db";
 import { diffSnapshots } from "../core/diff";
 import { evaluatePlan } from "../core/evaluate";
@@ -90,6 +90,7 @@ export const reevalStandingQuestions = schedules.task({
   maxDuration: 300,
   queue: { concurrencyLimit: 1 },
   run: async () => {
+    await tags.add("sq"); // Realtime subscribers watch this tag
     const result = await runReevalOnce();
     metadata.set("evaluated", result.evaluated).set("deltas", result.deltas);
     logger.log("standing re-eval sweep", result);

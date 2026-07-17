@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AskForm } from "@/components/AskForm";
 import { ErrorCard } from "@/components/ErrorCard";
+import { LiveRefresh } from "@/components/LiveRefresh";
 import { LivingAnswerCard } from "@/components/LivingAnswerCard";
 import { ToldFeed } from "@/components/ToldFeed";
 import { ask } from "@/core/ask";
@@ -74,6 +75,7 @@ export default async function Home({
           ))}
 
         <ToldFeed rows={told} />
+        <LiveRefresh />
 
         <footer className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 pt-8 text-xs text-zinc-600">
           <span>ClickHouse and Trigger.dev Summer Hackathon 2026</span>
