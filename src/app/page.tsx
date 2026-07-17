@@ -49,7 +49,11 @@ export default async function Home({
               <p className="mb-2 text-xs uppercase tracking-widest text-zinc-600">
                 server-rendered demo answer
               </p>
-              <LivingAnswerCard card={demoResult.card} />
+              <LivingAnswerCard
+                card={demoResult.card}
+                question={demoQuestion ?? undefined}
+                plan={demoResult.plan}
+              />
             </section>
           ) : (
             <section aria-label="demo answer">

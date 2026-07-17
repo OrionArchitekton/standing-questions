@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { LivingCard } from "@/core/card";
+import type { ChartPlan } from "@/core/plan";
 import { ErrorCard } from "./ErrorCard";
 import { LivingAnswerCard } from "./LivingAnswerCard";
 
@@ -14,7 +15,7 @@ const EXAMPLES = [
 type AskState =
   | { phase: "idle" }
   | { phase: "loading"; question: string }
-  | { phase: "answered"; card: LivingCard }
+  | { phase: "answered"; card: LivingCard; plan?: ChartPlan; question: string }
   | { phase: "failed"; reason: string; message: string };
 
 export function AskForm({ initialQuestion = "" }: { initialQuestion?: string }) {
@@ -33,7 +34,7 @@ export function AskForm({ initialQuestion = "" }: { initialQuestion?: string }) 
       });
       const body = await res.json();
       if (body.ok) {
-        setState({ phase: "answered", card: body.card });
+        setState({ phase: "answered", card: body.card, plan: body.plan, question: trimmed });
       } else {
         setState({
           phase: "failed",
@@ -109,7 +110,9 @@ export function AskForm({ initialQuestion = "" }: { initialQuestion?: string }) 
         </div>
       )}
 
-      {state.phase === "answered" && <LivingAnswerCard card={state.card} />}
+      {state.phase === "answered" && (
+        <LivingAnswerCard card={state.card} question={state.question} plan={state.plan} />
+      )}
       {state.phase === "failed" && <ErrorCard reason={state.reason} message={state.message} />}
     </div>
   );

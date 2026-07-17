@@ -27,7 +27,6 @@ describe.runIf(configured)("live ingest proof: Jetstream -> ClickHouse Cloud", (
   it("captures a bounded window from the real firehose and lands rows in Cloud", async () => {
     const before = await cloudCount();
     const result = await runIngestOnce(8_000);
-    // eslint-disable-next-line no-console
     console.log("ingest proof result:", JSON.stringify({ before, ...result }));
     expect(result.inserted).toBeGreaterThan(0);
     const after = await cloudCount();

@@ -16,4 +16,4 @@ export type AskFailure = {
   status: number;
 };
 
-export type AskResult = { ok: true; card: LivingCard } | AskFailure;
+export type AskResult = { ok: true; card: LivingCard; plan: ChartPlan } | AskFailure;

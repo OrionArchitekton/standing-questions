@@ -51,6 +51,7 @@ export async function ask(question: string): Promise<AskResult> {
 
   return {
     ok: true,
+    plan: compiled.plan,
     card: {
       chart: compiled.plan.chart,
       verdict: renderVerdict(compiled.plan.verdict.template, evaluated.snapshot.stat),

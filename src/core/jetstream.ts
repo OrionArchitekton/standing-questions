@@ -22,6 +22,11 @@ type JetstreamEvent = {
 const KINDS = new Set(["commit", "identity", "account"]);
 const UINT16_MAX = 65_535;
 
+/** Format epoch milliseconds as a ClickHouse DateTime string (UTC). */
+export function formatChTs(ms: number): string {
+  return new Date(ms).toISOString().slice(0, 19).replace("T", " ");
+}
+
 export function jetstreamEventToRow(event: JetstreamEvent): BlueskyEventRow | null {
   if (typeof event?.did !== "string" || typeof event.time_us !== "number") return null;
   if (typeof event.kind !== "string" || !KINDS.has(event.kind)) return null;
@@ -32,7 +37,7 @@ export function jetstreamEventToRow(event: JetstreamEvent): BlueskyEventRow | nu
   const text = typeof record?.text === "string" ? record.text : "";
 
   return {
-    ts: new Date(event.time_us / 1_000).toISOString().slice(0, 19).replace("T", " "),
+    ts: formatChTs(event.time_us / 1_000),
     kind: event.kind,
     collection: typeof commit?.collection === "string" ? commit.collection : "",
     operation: typeof commit?.operation === "string" ? commit.operation : "",

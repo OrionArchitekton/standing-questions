@@ -21,5 +21,5 @@ export async function POST(req: Request): Promise<NextResponse> {
       { status: result.status },
     );
   }
-  return NextResponse.json({ ok: true, card: result.card });
+  return NextResponse.json({ ok: true, card: result.card, plan: result.plan });
 }

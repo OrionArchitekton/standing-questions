@@ -1,6 +1,8 @@
 import type { LivingCard } from "@/core/card";
+import type { ChartPlan } from "@/core/plan";
 import type { DeltaRule } from "@/core/types";
 import { ChartSvg } from "./ChartSvg";
+import { PinButton } from "./PinButton";
 
 function describeRule(rule: DeltaRule): string {
   if (rule.kind === "threshold") {
@@ -12,7 +14,15 @@ function describeRule(rule: DeltaRule): string {
   return `Re-open this thread when the ${rule.window}-point windowed mean shifts by ${rule.minRatio}x.`;
 }
 
-export function LivingAnswerCard({ card }: { card: LivingCard }) {
+export function LivingAnswerCard({
+  card,
+  question,
+  plan,
+}: {
+  card: LivingCard;
+  question?: string;
+  plan?: ChartPlan;
+}) {
   return (
     <article
       data-testid="living-answer-card"
@@ -30,6 +40,12 @@ export function LivingAnswerCard({ card }: { card: LivingCard }) {
       <p data-testid="verdict" className="mt-3 text-sm font-medium text-zinc-200">
         {card.verdict}
       </p>
+
+      {question && plan && (
+        <div className="mt-3">
+          <PinButton question={question} plan={plan} card={card} />
+        </div>
+      )}
 
       <details className="mt-4 group">
         <summary className="cursor-pointer select-none text-xs text-zinc-500 hover:text-zinc-300">
