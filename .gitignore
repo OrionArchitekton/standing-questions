@@ -42,3 +42,4 @@ next-env.d.ts
 
 # Trigger.dev CLI build output
 .trigger/
+demo-out/
