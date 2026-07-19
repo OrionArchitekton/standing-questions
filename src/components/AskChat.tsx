@@ -99,10 +99,11 @@ export function AskChat() {
 
       {messages.length === 0 && (
         <div className="flex flex-wrap gap-2">
-          {EXAMPLES.map((ex) => (
+          {EXAMPLES.map((ex, i) => (
             <button
               key={ex}
               type="button"
+              data-testid={`example-chip-${i}`}
               onClick={() => submit(ex)}
               className="rounded-full border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-emerald-500/50 hover:text-zinc-200"
             >
