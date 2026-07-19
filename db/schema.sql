@@ -10,8 +10,12 @@ CREATE TABLE IF NOT EXISTS standing_questions (
     baseline JSONB NOT NULL,      -- last Snapshot the subscriber was shown
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'paused')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    last_evaluated_at TIMESTAMPTZ
+    last_evaluated_at TIMESTAMPTZ,
+    chat_id TEXT               -- chat session that pinned this question (thread to reopen)
 );
+
+-- Additive migration for pre-chat rows (safe to re-run).
+ALTER TABLE standing_questions ADD COLUMN IF NOT EXISTS chat_id TEXT;
 
 -- Told-Ledger: one row per time the agent decided the picture changed enough
 -- to reopen the thread. CDC'd to ClickHouse via ClickPipes (bonus category).

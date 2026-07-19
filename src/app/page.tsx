@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { AskForm } from "@/components/AskForm";
+import { headers } from "next/headers";
+import { AskChat } from "@/components/AskChat";
 import { ErrorCard } from "@/components/ErrorCard";
 import { LiveRefresh } from "@/components/LiveRefresh";
 import { LivingAnswerCard } from "@/components/LivingAnswerCard";
@@ -8,6 +9,11 @@ import { ToldFeed } from "@/components/ToldFeed";
 import { ask } from "@/core/ask";
 import { listRecentTold, type ToldLedgerRow } from "@/core/db";
 import { sinceLastTold, type WatchRow } from "@/core/olap-join";
+import { makeRateLimiter } from "@/core/rate-limit";
+
+// The SSR ?demo= path runs a real ask() (a model call) outside /api/ask, so it
+// carries its own per-IP limiter; without one, page loads bypass the API gate.
+const allowDemo = makeRateLimiter({ limit: 5, windowMs: 60_000 });
 
 export const metadata: Metadata = {
   title: "Standing Questions",
@@ -24,7 +30,19 @@ export default async function Home({
   const demoRaw = params.demo;
   const demoQuestion =
     typeof demoRaw === "string" && demoRaw.trim().length >= 3 ? demoRaw.trim().slice(0, 300) : null;
-  const demoResult = demoQuestion ? await ask(demoQuestion) : null;
+  let demoResult = null;
+  if (demoQuestion) {
+    const hdrs = await headers();
+    const ip = hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+    demoResult = allowDemo(ip)
+      ? await ask(demoQuestion)
+      : ({
+          ok: false as const,
+          reason: "rate_limited",
+          message: "Too many demo renders; wait a minute.",
+          status: 429,
+        } as const);
+  }
 
   let told: ToldLedgerRow[] = [];
   try {
@@ -54,7 +72,7 @@ export default async function Home({
           </p>
         </header>
 
-        <AskForm initialQuestion={demoQuestion ?? ""} />
+        <AskChat />
 
         {demoResult &&
           (demoResult.ok ? (
@@ -90,6 +108,7 @@ export default async function Home({
             source
           </a>
           <span>read-only demo; questions are compiled through a fail-closed SQL gate</span>
+          <span>sampled stream: a bounded 25s Jetstream capture every 5 minutes, not the full firehose</span>
         </footer>
       </main>
     </div>

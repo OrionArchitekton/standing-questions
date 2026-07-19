@@ -10,10 +10,12 @@ export function PinButton({
   question,
   plan,
   card,
+  chatId,
 }: {
   question: string;
   plan: ChartPlan;
   card: LivingCard;
+  chatId?: string;
 }) {
   const [state, setState] = useState<PinState>("idle");
 
@@ -24,7 +26,7 @@ export function PinButton({
       const res = await fetch("/api/pin", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ question, plan, baseline: card.snapshot }),
+        body: JSON.stringify({ question, plan, baseline: card.snapshot, chatId }),
       });
       setState(res.ok ? "pinned" : "failed");
     } catch {

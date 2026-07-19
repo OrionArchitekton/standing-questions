@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { sqlAllowed } from "@/core/compile";
 import { listActiveStandingQuestions, pinStandingQuestion } from "@/core/db";
+import { firehoseSchema } from "@/core/firehose-schema";
 import { chartPlanSchema } from "@/core/plan";
 import type { ChartPlan } from "@/core/plan";
 import { makeRateLimiter } from "@/core/rate-limit";
@@ -20,6 +22,7 @@ const pinBodySchema = z.object({
   question: z.string().min(3).max(300),
   plan: chartPlanSchema,
   baseline: snapshotSchema,
+  chatId: z.string().min(8).max(64).optional(),
 });
 
 export async function POST(req: Request): Promise<NextResponse> {
@@ -40,6 +43,14 @@ export async function POST(req: Request): Promise<NextResponse> {
   if (!parsed.success) {
     return NextResponse.json({ ok: false, reason: "bad_request" }, { status: 400 });
   }
+  // The plan arrives from the client, so the compile-time gate proves nothing
+  // here: re-run the same allowlist before the plan can ever reach the cron.
+  if (!sqlAllowed(parsed.data.plan.sql, firehoseSchema)) {
+    return NextResponse.json(
+      { ok: false, reason: "disallowed", message: "The plan failed the safety gate." },
+      { status: 400 },
+    );
+  }
 
   try {
     const active = await listActiveStandingQuestions();
@@ -53,6 +64,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       parsed.data.question,
       parsed.data.plan as ChartPlan,
       parsed.data.baseline,
+      parsed.data.chatId ?? null,
     );
     return NextResponse.json({ ok: true, id }, { status: 201 });
   } catch {

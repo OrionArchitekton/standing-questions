@@ -19,7 +19,9 @@ const deltaRuleSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("regime"),
     window: z.number().int().positive(),
-    minRatio: z.number().positive(),
+    // > 1 or the rule fires on an ordinary evaluation: regimeFired tests
+    // next/baseline >= minRatio, so 0.5 would trigger on almost any tick.
+    minRatio: z.number().gt(1),
   }),
 ]);
 

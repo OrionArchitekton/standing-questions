@@ -1,8 +1,10 @@
 import { createClient } from "@clickhouse/client";
 import { logger, metadata, schedules, tags } from "@trigger.dev/sdk";
+import { sqlAllowed } from "../core/compile";
 import { listActiveStandingQuestions, recordEvaluation, recordTold } from "../core/db";
 import { diffSnapshots } from "../core/diff";
 import { evaluatePlan } from "../core/evaluate";
+import { firehoseSchema } from "../core/firehose-schema";
 import { formatChTs } from "../core/jetstream";
 import { renderVerdict } from "../core/verdict";
 
@@ -39,6 +41,18 @@ export async function runReevalOnce(): Promise<{
 
   for (const q of questions) {
     const started = Date.now();
+    // Defense in depth: rows reach Postgres via /api/pin, so never execute a
+    // stored plan the gate would not pass today (fail-closed, not grandfathered).
+    if (!sqlAllowed(q.plan.sql, firehoseSchema)) {
+      errors++;
+      ticks.push({
+        ts: formatChTs(Date.now()),
+        standing_question_id: q.id,
+        outcome: "error",
+        eval_ms: Date.now() - started,
+      });
+      continue;
+    }
     const evaluated = await evaluatePlan(q.plan, chConn);
     let outcome: TickRow["outcome"] = "silent";
 

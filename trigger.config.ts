@@ -24,7 +24,14 @@ export default defineConfig({
       // Deploy-time sync from the local (doppler-provided) env into the
       // Trigger.dev project env, so deployed tasks can reach ClickHouse Cloud.
       syncEnvVars(() =>
-        ["CLICKHOUSE_URL", "CLICKHOUSE_USER", "CLICKHOUSE_PASSWORD", "DATABASE_URL"]
+        [
+          "CLICKHOUSE_URL",
+          "CLICKHOUSE_USER",
+          "CLICKHOUSE_PASSWORD",
+          "DATABASE_URL",
+          // sq-chat agent: streamText model + the compile step inside askFirehose
+          "ANTHROPIC_API_KEY",
+        ]
           .filter((name) => process.env[name])
           .map((name) => ({ name, value: process.env[name] as string, isSecret: true })),
       ),

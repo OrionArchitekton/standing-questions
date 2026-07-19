@@ -1,4 +1,5 @@
 import type { ToldLedgerRow } from "@/core/db";
+import { ChartSvg } from "./ChartSvg";
 
 function statLine(row: ToldLedgerRow): string {
   return `${row.before_snapshot.stat} -> ${row.after_snapshot.stat}`;
@@ -22,7 +23,23 @@ export function ToldFeed({ rows }: { rows: ToldLedgerRow[] }) {
               <span className="font-mono text-xs text-sky-300">{statLine(row)}</span>
             </div>
             <p className="mt-1 text-xs text-zinc-400">{row.verdict}</p>
-            <p className="mt-1 text-[11px] text-zinc-600">
+            {row.before_snapshot.series.length > 0 && row.after_snapshot.series.length > 0 && (
+              <div className="mt-3 grid grid-cols-2 gap-3" data-testid="delta-visual">
+                <figure className="opacity-50">
+                  <figcaption className="mb-1 text-[10px] uppercase tracking-widest text-zinc-500">
+                    before (what you were last told)
+                  </figcaption>
+                  <ChartSvg type="line" series={row.before_snapshot.series} />
+                </figure>
+                <figure>
+                  <figcaption className="mb-1 text-[10px] uppercase tracking-widest text-sky-400">
+                    after (when the rule fired)
+                  </figcaption>
+                  <ChartSvg type="line" series={row.after_snapshot.series} />
+                </figure>
+              </div>
+            )}
+            <p className="mt-2 text-[11px] text-zinc-600">
               rule {row.rule.kind} fired at {new Date(row.told_at).toISOString().slice(0, 16).replace("T", " ")} UTC
             </p>
           </li>

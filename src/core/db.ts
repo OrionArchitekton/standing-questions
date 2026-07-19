@@ -10,6 +10,7 @@ export type StandingQuestionRow = {
   status: "active" | "paused";
   created_at: string;
   last_evaluated_at: string | null;
+  chat_id: string | null;
 };
 
 export type ToldLedgerRow = {
@@ -33,17 +34,18 @@ export async function pinStandingQuestion(
   question: string,
   plan: ChartPlan,
   baseline: Snapshot,
+  chatId: string | null = null,
 ): Promise<{ id: string }> {
   const rows = await sql().query(
-    "INSERT INTO standing_questions (question, plan, baseline) VALUES ($1, $2, $3) RETURNING id",
-    [question, JSON.stringify(plan), JSON.stringify(baseline)],
+    "INSERT INTO standing_questions (question, plan, baseline, chat_id) VALUES ($1, $2, $3, $4) RETURNING id",
+    [question, JSON.stringify(plan), JSON.stringify(baseline), chatId],
   );
   return { id: (rows as { id: string }[])[0].id };
 }
 
 export async function listActiveStandingQuestions(): Promise<StandingQuestionRow[]> {
   const rows = await sql().query(
-    "SELECT id, question, plan, baseline, status, created_at, last_evaluated_at FROM standing_questions WHERE status = 'active' ORDER BY created_at",
+    "SELECT id, question, plan, baseline, status, created_at, last_evaluated_at, chat_id FROM standing_questions WHERE status = 'active' ORDER BY created_at",
   );
   return rows as StandingQuestionRow[];
 }

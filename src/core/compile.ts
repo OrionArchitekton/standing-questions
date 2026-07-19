@@ -15,6 +15,7 @@ export function buildCompilePrompt(question: string, schema: FirehoseSchema): st
     "",
     'Reply with ONLY a JSON object, no prose, matching exactly: {"sql": string, "chart": {"type": "line"|"bar"|"area", "x": string, "y": string, "title": string}, "verdict": {"template": string}, "deltaRule": {"kind": "threshold", "stat": "last", "crossesAbove"?: number, "crossesBelow"?: number} | {"kind": "regime", "window": number, "minRatio": number}}.',
     "Rules for sql: a single SELECT statement over the tables above, aggregated to at most a few hundred points, always ending with LIMIT. No writes, no other tables, no semicolons.",
+    "Rules for deltaRule: regime minRatio must be greater than 1 (e.g. 1.5 fires when the recent mean rises 50 percent above the baseline mean).",
     "Rules for text fields: title at most 60 characters; verdict template one line using {stat}; never use em or en dashes in any text field.",
     "If the question cannot be answered from these tables, reply exactly: REFUSE: <ten words why>.",
     "",
@@ -22,7 +23,12 @@ export function buildCompilePrompt(question: string, schema: FirehoseSchema): st
   ].join("\n");
 }
 
-function sqlAllowed(sql: string, schema: FirehoseSchema): boolean {
+/**
+ * The fail-closed SQL gate. Exported so every path that can carry a plan to
+ * ClickHouse re-validates it: compile (here), /api/pin (client-supplied plans),
+ * and the re-eval cron (defense in depth for rows already in Postgres).
+ */
+export function sqlAllowed(sql: string, schema: FirehoseSchema): boolean {
   const trimmed = sql.trim();
   const stripped = trimmed.replace(/'(?:[^']|'')*'/g, "''");
   if (!/^SELECT\b/i.test(stripped)) return false;
