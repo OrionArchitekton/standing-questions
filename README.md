@@ -11,7 +11,7 @@ Built for the ClickHouse and Trigger.dev Virtual Summer Hackathon 2026 (theme: "
 3. Open the **Evidence** drawer on the card: the exact gated SQL, the watch rule, capture time.
 4. Scroll down: **standing watch** counts are a live OLTP+OLAP join (Neon Told-Ledger, CDC'd into ClickHouse via ClickPipes, joined against the firehose rollup).
 5. **Threads the agent reopened** shows a real Delta Card with before/after charts from a threshold that fired on live data.
-6. **Demo video (1:42):** https://youtu.be/Z1XFTLJyhF0
+6. **Demo video (2:11):** https://youtu.be/FikXVirIS1s
 
 ## How it works
 
