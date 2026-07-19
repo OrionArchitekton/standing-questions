@@ -11,7 +11,7 @@ Built for the ClickHouse and Trigger.dev Virtual Summer Hackathon 2026 (theme: "
 3. Open the **Evidence** drawer on the card: the exact gated SQL, the watch rule, capture time.
 4. Scroll down: **standing watch** counts are a live OLTP+OLAP join (Neon Told-Ledger, CDC'd into ClickHouse via ClickPipes, joined against the firehose rollup).
 5. **Threads the agent reopened** shows a real Delta Card with before/after charts from a threshold that fired on live data.
-6. **Demo video (2:11):** https://youtu.be/FikXVirIS1s
+6. **Demo video (3:30):** https://youtu.be/2oMPTFokXws
 
 ## How it works
 
@@ -58,7 +58,7 @@ user turn --> Trigger.dev chat.agent() run (sq-chat, durable session per thread)
 npm install
 # secrets via doppler (ANTHROPIC_API_KEY, CLICKHOUSE_*, DATABASE_URL, TRIGGER_SECRET_KEY)
 npm run dev                      # app
-npx vitest run                   # 51 unit tests (seams: compile gate + re-validation, diff, geometry, ingest mapping, rate limit, OLAP join)
+npx vitest run                   # 59 unit tests (seams: compile gate + re-validation, receipt, diff, geometry, ingest mapping, rate limit, OLAP join)
 npx vitest run --config vitest.proof.config.ts   # live proofs (real model, real ClickHouse, real Jetstream)
 npx trigger.dev@4.5.4 dev        # run the tasks locally
 ```
