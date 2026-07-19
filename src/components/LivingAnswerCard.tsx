@@ -9,9 +9,9 @@ function describeRule(rule: DeltaRule): string {
     const parts: string[] = [];
     if (rule.crossesAbove !== undefined) parts.push(`crosses above ${rule.crossesAbove}`);
     if (rule.crossesBelow !== undefined) parts.push(`crosses below ${rule.crossesBelow}`);
-    return `Re-open this thread when the latest value ${parts.join(" or ") || "crosses a threshold"}.`;
+    return `Re-open this question when the latest value ${parts.join(" or ") || "crosses a threshold"}.`;
   }
-  return `Re-open this thread when the ${rule.window}-point windowed mean shifts by ${rule.minRatio}x.`;
+  return `Re-open this question when the ${rule.window}-point windowed mean shifts by ${rule.minRatio}x.`;
 }
 
 export function LivingAnswerCard({

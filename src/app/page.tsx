@@ -18,7 +18,7 @@ const allowDemo = makeRateLimiter({ limit: 5, windowMs: 60_000 });
 export const metadata: Metadata = {
   title: "Standing Questions",
   description:
-    "Ask the Bluesky firehose once, get a living chart. The agent keeps watching and reopens the thread when the picture changes.",
+    "Ask the Bluesky firehose once, get a living chart. The agent keeps watching and reopens the question when the picture changes.",
 };
 
 export default async function Home({
@@ -68,7 +68,7 @@ export default async function Home({
           <p className="max-w-xl text-sm leading-6 text-zinc-400">
             Ask once, get a living chart instead of a paragraph. Pin it, and the agent keeps
             re-evaluating on Trigger.dev; when the picture materially changes, it reopens the
-            thread with a visual delta, not a wall of text.
+            question with a visual before/after delta, not a wall of text.
           </p>
         </header>
 

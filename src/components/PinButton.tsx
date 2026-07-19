@@ -41,7 +41,7 @@ export function PinButton({
         className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/40 bg-sky-500/10 px-3 py-1.5 text-xs text-sky-300"
       >
         <span aria-hidden>&#9733;</span> Standing: the agent re-checks every 10 minutes and
-        reopens this thread on a material change
+        reopens this question on a material change
       </span>
     );
   }
