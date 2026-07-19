@@ -16,4 +16,14 @@ export type AskFailure = {
   status: number;
 };
 
-export type AskResult = { ok: true; card: LivingCard; plan: ChartPlan } | AskFailure;
+export type AskResult =
+  | {
+      ok: true;
+      card: LivingCard;
+      plan: ChartPlan;
+      /** The canonical question the receipt covers; pin with THIS string. */
+      question: string;
+      /** Server-minted HMAC over {question, plan, baseline}; /api/pin requires it. */
+      receipt?: string;
+    }
+  | AskFailure;

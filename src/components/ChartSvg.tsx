@@ -13,9 +13,12 @@ const BOX: Box = { width: 640, height: 240, pad: 30 };
 export function ChartSvg({
   type,
   series,
+  domain,
 }: {
   type: "line" | "bar" | "area";
   series: SeriesPoint[];
+  /** Shared y-domain for paired charts (before/after delta); auto-ranged otherwise. */
+  domain?: { min: number; max: number };
 }) {
   if (series.length === 0) {
     return (
@@ -26,15 +29,15 @@ export function ChartSvg({
   }
 
   const values = series.map((p) => p.v);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  const min = domain ? domain.min : Math.min(...values);
+  const max = domain ? domain.max : Math.max(...values);
   const span = max - min;
   const innerH = BOX.height - 2 * BOX.pad;
   const ticks = span === 0 ? [min] : niceTicks(min, max, 4);
   const yFor = (v: number) =>
     span === 0 ? BOX.height / 2 : BOX.pad + (1 - (v - min) / span) * innerH;
 
-  const pts = scalePoints(series, BOX);
+  const pts = scalePoints(series, BOX, domain);
   const labelIdx =
     series.length <= 2 ? series.map((_, i) => i) : [0, Math.floor(series.length / 2), series.length - 1];
 

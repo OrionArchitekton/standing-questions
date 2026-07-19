@@ -3,6 +3,7 @@ import { compileQuestion } from "./compile";
 import { evaluatePlan } from "./evaluate";
 import { firehoseSchema } from "./firehose-schema";
 import { makeAnthropicProposer } from "./propose";
+import { mintReceipt } from "./receipt";
 import { renderVerdict } from "./verdict";
 
 export const FAIL_MESSAGES: Record<string, string> = {
@@ -52,6 +53,7 @@ export async function ask(question: string): Promise<AskResult> {
   return {
     ok: true,
     plan: compiled.plan,
+    question: question.trim(),
     card: {
       chart: compiled.plan.chart,
       verdict: renderVerdict(compiled.plan.verdict.template, evaluated.snapshot.stat),
@@ -59,5 +61,11 @@ export async function ask(question: string): Promise<AskResult> {
       sql: compiled.plan.sql,
       deltaRule: compiled.plan.deltaRule,
     },
+    receipt:
+      mintReceipt({
+        question: question.trim(),
+        plan: compiled.plan,
+        baseline: evaluated.snapshot,
+      }) ?? undefined,
   };
 }

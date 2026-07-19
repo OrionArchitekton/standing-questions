@@ -23,6 +23,38 @@ export function buildCompilePrompt(question: string, schema: FirehoseSchema): st
   ].join("\n");
 }
 
+/** Largest LIMIT the gate accepts; matches the 2000-point snapshot cap at pin time. */
+export const MAX_LIMIT = 2000;
+
+/**
+ * A comma at paren depth 0 inside a FROM clause is an implicit cross join:
+ * `FROM a, b` (or `FROM a, url(...)`) smuggles a second source past the
+ * FROM/JOIN table extraction below. Commas inside function calls
+ * (`uniq(did, kind)`) sit at depth > 0 and stay legal.
+ */
+function fromClauseHasTopLevelComma(stripped: string): boolean {
+  const fromRe = /\bFROM\b/gi;
+  let m: RegExpExecArray | null;
+  while ((m = fromRe.exec(stripped)) !== null) {
+    let depth = 0;
+    for (let i = m.index + m[0].length; i < stripped.length; i++) {
+      const ch = stripped[i];
+      if (ch === "(") depth++;
+      else if (ch === ")") {
+        if (depth === 0) break; // closing a paren the FROM lives inside
+        depth--;
+      } else if (ch === "," && depth === 0) return true;
+      else if (
+        depth === 0 &&
+        /\b(WHERE|GROUP|ORDER|HAVING|LIMIT|UNION|SETTINGS)\b/i.test(stripped.slice(i, i + 9))
+      ) {
+        break;
+      }
+    }
+  }
+  return false;
+}
+
 /**
  * The fail-closed SQL gate. Exported so every path that can carry a plan to
  * ClickHouse re-validates it: compile (here), /api/pin (client-supplied plans),
@@ -33,10 +65,12 @@ export function sqlAllowed(sql: string, schema: FirehoseSchema): boolean {
   const stripped = trimmed.replace(/'(?:[^']|'')*'/g, "''");
   if (!/^SELECT\b/i.test(stripped)) return false;
   if (stripped.includes(";")) return false;
-  if (!/\bLIMIT\s+\d+\s*$/i.test(stripped)) return false;
+  const limitMatch = stripped.match(/\bLIMIT\s+(\d+)\s*$/i);
+  if (!limitMatch || Number(limitMatch[1]) > MAX_LIMIT) return false;
   if (/\b(INSERT|ALTER|DROP|CREATE|TRUNCATE|DELETE|UPDATE|GRANT|SYSTEM)\b/i.test(stripped)) {
     return false;
   }
+  if (fromClauseHasTopLevelComma(stripped)) return false;
   const allowed = new Set(schema.tables.map((t) => t.name.toLowerCase()));
   const referenced = [...stripped.matchAll(/\b(?:FROM|JOIN)\s+([A-Za-z0-9_.]+)/gi)].map((m) =>
     m[1].toLowerCase(),

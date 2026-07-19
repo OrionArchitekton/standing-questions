@@ -14,11 +14,18 @@ function vRange(series: SeriesPoint[]): { min: number; max: number } {
   return { min, max };
 }
 
-export function scalePoints(series: SeriesPoint[], box: Box): Pt[] {
+export function scalePoints(
+  series: SeriesPoint[],
+  box: Box,
+  // Optional shared y-domain so paired charts (before/after delta) use one
+  // scale; per-series auto-range otherwise. Same visual change must not look
+  // bigger on one side because its axis is tighter.
+  domain?: { min: number; max: number },
+): Pt[] {
   if (series.length === 0) return [];
   const innerW = box.width - 2 * box.pad;
   const innerH = box.height - 2 * box.pad;
-  const { min, max } = vRange(series);
+  const { min, max } = domain ?? vRange(series);
   const span = max - min;
   return series.map((p, i) => {
     const x =

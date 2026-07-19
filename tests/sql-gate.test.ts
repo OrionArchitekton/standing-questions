@@ -15,6 +15,33 @@ describe("sqlAllowed (re-validation gate for stored/client plans)", () => {
     ).toBe(true);
   });
 
+  it("rejects comma sources that smuggle unchecked tables or table functions", () => {
+    expect(
+      sqlAllowed(
+        "SELECT toString(tl.told_at) AS t, toFloat64(length(tl.verdict)) AS v FROM bluesky_events AS b, told_ledger AS tl LIMIT 1",
+        firehoseSchema,
+      ),
+    ).toBe(false);
+    expect(
+      sqlAllowed("SELECT 1 AS x FROM bluesky_events, url('http://example.com', CSV) LIMIT 1", firehoseSchema),
+    ).toBe(false);
+  });
+
+  it("still accepts commas in the SELECT list and inside function calls", () => {
+    expect(
+      sqlAllowed(
+        "SELECT toStartOfHour(ts) AS hour, count() AS posts, uniq(did, kind) AS actors FROM bluesky_events GROUP BY hour ORDER BY hour LIMIT 24",
+        firehoseSchema,
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects an unbounded LIMIT", () => {
+    expect(
+      sqlAllowed("SELECT count() AS c FROM bluesky_events LIMIT 100000", firehoseSchema),
+    ).toBe(false);
+  });
+
   it("rejects writes, foreign tables, missing LIMIT, and stacked statements", () => {
     expect(sqlAllowed("DROP TABLE bluesky_events", firehoseSchema)).toBe(false);
     expect(sqlAllowed("SELECT * FROM system.tables LIMIT 5", firehoseSchema)).toBe(false);

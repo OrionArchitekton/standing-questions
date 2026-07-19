@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { AgentPulse } from "@/components/AgentPulse";
 import { AskChat } from "@/components/AskChat";
 import { ErrorCard } from "@/components/ErrorCard";
 import { LiveRefresh } from "@/components/LiveRefresh";
@@ -10,6 +11,7 @@ import { ask } from "@/core/ask";
 import { listRecentTold, type ToldLedgerRow } from "@/core/db";
 import { sinceLastTold, type WatchRow } from "@/core/olap-join";
 import { makeRateLimiter } from "@/core/rate-limit";
+import { agentPulse } from "@/core/telemetry";
 
 // The SSR ?demo= path runs a real ask() (a model call) outside /api/ask, so it
 // carries its own per-IP limiter; without one, page loads bypass the API gate.
@@ -51,6 +53,7 @@ export default async function Home({
     // told feed is progressive enhancement; the page renders without it
   }
   const watch: WatchRow[] = await sinceLastTold();
+  const pulse = await agentPulse();
 
   return (
     <div className="flex flex-1 flex-col items-center bg-zinc-950 font-sans">
@@ -82,8 +85,9 @@ export default async function Home({
               </p>
               <LivingAnswerCard
                 card={demoResult.card}
-                question={demoQuestion ?? undefined}
+                question={demoResult.question}
                 plan={demoResult.plan}
+                receipt={demoResult.receipt}
               />
             </section>
           ) : (
@@ -97,6 +101,7 @@ export default async function Home({
 
         <StandingWatch rows={watch} />
         <ToldFeed rows={told} />
+        <AgentPulse pulse={pulse} />
         <LiveRefresh />
 
         <footer className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 pt-8 text-xs text-zinc-600">

@@ -19,11 +19,13 @@ export function LivingAnswerCard({
   question,
   plan,
   chatId,
+  receipt,
 }: {
   card: LivingCard;
   question?: string;
   plan?: ChartPlan;
   chatId?: string;
+  receipt?: string;
 }) {
   return (
     <article
@@ -45,7 +47,7 @@ export function LivingAnswerCard({
 
       {question && plan && (
         <div className="mt-3">
-          <PinButton question={question} plan={plan} card={card} chatId={chatId} />
+          <PinButton question={question} plan={plan} card={card} chatId={chatId} receipt={receipt} />
         </div>
       )}
 

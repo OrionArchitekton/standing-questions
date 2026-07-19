@@ -142,9 +142,10 @@ export function AskChat() {
                     <LivingAnswerCard
                       key={i}
                       card={result.card}
-                      question={userTextBefore(mi) || undefined}
+                      question={result.question || userTextBefore(mi) || undefined}
                       plan={result.plan}
                       chatId={chatId}
+                      receipt={result.receipt}
                     />
                   ) : (
                     <ErrorCard key={i} reason={result.reason} message={result.message} />

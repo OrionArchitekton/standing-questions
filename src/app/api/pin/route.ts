@@ -6,6 +6,7 @@ import { firehoseSchema } from "@/core/firehose-schema";
 import { chartPlanSchema } from "@/core/plan";
 import type { ChartPlan } from "@/core/plan";
 import { makeRateLimiter } from "@/core/rate-limit";
+import { verifyReceipt } from "@/core/receipt";
 
 export const runtime = "nodejs";
 
@@ -23,6 +24,7 @@ const pinBodySchema = z.object({
   plan: chartPlanSchema,
   baseline: snapshotSchema,
   chatId: z.string().min(8).max(64).optional(),
+  receipt: z.string().min(16).max(128),
 });
 
 export async function POST(req: Request): Promise<NextResponse> {
@@ -43,8 +45,25 @@ export async function POST(req: Request): Promise<NextResponse> {
   if (!parsed.success) {
     return NextResponse.json({ ok: false, reason: "bad_request" }, { status: 400 });
   }
-  // The plan arrives from the client, so the compile-time gate proves nothing
-  // here: re-run the same allowlist before the plan can ever reach the cron.
+  // The payload arrives from the client. Two independent checks, both
+  // fail-closed: the receipt proves this exact {question, plan, baseline} was
+  // minted by our server (no fabricated pins), and the SQL gate re-validates
+  // the plan even so (no grandfathered SQL reaches the cron).
+  if (
+    !verifyReceipt(
+      {
+        question: parsed.data.question,
+        plan: parsed.data.plan as ChartPlan,
+        baseline: parsed.data.baseline,
+      },
+      parsed.data.receipt,
+    )
+  ) {
+    return NextResponse.json(
+      { ok: false, reason: "unverified", message: "This answer was not minted by the server." },
+      { status: 403 },
+    );
+  }
   if (!sqlAllowed(parsed.data.plan.sql, firehoseSchema)) {
     return NextResponse.json(
       { ok: false, reason: "disallowed", message: "The plan failed the safety gate." },

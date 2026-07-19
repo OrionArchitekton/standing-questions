@@ -81,3 +81,18 @@ describe("chart geometry (pure seam under LivingAnswerCard)", () => {
     expect(shortLabel("en")).toBe("en");
   });
 });
+
+describe("scalePoints shared domain (before/after pairs)", () => {
+  const box = { width: 640, height: 240, pad: 30 };
+  it("maps the same value to the same y across two series when a domain is shared", () => {
+    const domain = { min: 0, max: 100 };
+    const a = scalePoints([{ t: "1", v: 50 }, { t: "2", v: 100 }], box, domain);
+    const b = scalePoints([{ t: "1", v: 0 }, { t: "2", v: 50 }], box, domain);
+    expect(a[0].y).toBe(b[1].y); // v=50 lands identically in both charts
+  });
+  it("auto-ranges per series when no domain is given (existing behavior)", () => {
+    const a = scalePoints([{ t: "1", v: 50 }, { t: "2", v: 100 }], box);
+    const b = scalePoints([{ t: "1", v: 0 }, { t: "2", v: 50 }], box);
+    expect(a[0].y).not.toBe(b[1].y);
+  });
+});

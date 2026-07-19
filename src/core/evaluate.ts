@@ -31,7 +31,20 @@ export async function evaluatePlan(plan: ChartPlan, conn: ChConn): Promise<Evalu
 
     let rows: Record<string, unknown>[];
     try {
-      const rs = await client.query({ query: plan.sql, format: "JSONEachRow" });
+      const rs = await client.query({
+        query: plan.sql,
+        format: "JSONEachRow",
+        // Budget every gated query at the server too: no writes or DDL even if
+        // a plan slipped the gate, and hard caps on time, result size, and
+        // bytes scanned so one query cannot exhaust the shared service.
+        clickhouse_settings: {
+          readonly: "2",
+          max_execution_time: 15,
+          max_result_rows: "2000",
+          result_overflow_mode: "break",
+          max_bytes_to_read: "2000000000",
+        },
+      });
       rows = await rs.json<Record<string, unknown>>();
     } catch {
       return { ok: false, reason: "query_error" };
